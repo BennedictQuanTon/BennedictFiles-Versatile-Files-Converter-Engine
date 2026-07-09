@@ -1,0 +1,44 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model Guest {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  createdAt DateTime @default(now())
+  jobs      Job[]
+
+  @@map("guests")
+}
+
+model Job {
+  id        String     @id @default(uuid())
+  guestId   String
+  guest     Guest      @relation(fields: [guestId], references: [id], onDelete: Cascade)
+  tool      String
+  status    String     // PENDING | PROCESSING | DONE | FAILED
+  inputKey  String?    // Supabase Storage path
+  outputKey String?    // Supabase Storage path
+  errorMsg  String?
+  createdAt DateTime   @default(now())
+  expiresAt DateTime
+  emailLogs EmailLog[]
+
+  @@map("jobs")
+}
+
+model EmailLog {
+  id        String   @id @default(uuid())
+  jobId     String
+  job       Job      @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  recipient String
+  sentAt    DateTime @default(now())
+  status    String   // SENT | FAILED
+
+  @@map("email_logs")
+}
